@@ -3,6 +3,8 @@
 import requests
 import argparse
 import urllib.robotparser as robotparser
+from bs4 import BeautifulSoup
+import lxml
 
 # Note sure if I wanna run this as a standalone script or allow to be imported as a module
 # class Scraper:
@@ -42,4 +44,12 @@ if robots.status_code != 200:
 rp = robotparser.RobotFileParser()
 rp.set_url(website + "robots.txt")
 rp.read()
-sitemap = rp.site_maps()
+sitemaps = rp.site_maps()
+
+# Parse sitemap.xml
+for sitemap in set(sitemaps):
+    # print(sitemap)
+    sm = requests.get(sitemap)
+    soup = BeautifulSoup(sm.text, 'xml')
+    for url in soup.find_all('loc'):
+        print(url)
