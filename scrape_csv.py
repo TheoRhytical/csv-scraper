@@ -3,9 +3,11 @@
 import requests
 import argparse
 import urllib.robotparser as robotparser
+from urllib.parse import urlparse, ParseResult
 from bs4 import BeautifulSoup
 import lxml
-from pathlib import Path
+# from pathlib import Path
+import pathlib
 
 # Note sure if I wanna run this as a standalone script or allow to be imported as a module
 # class Scraper:
@@ -25,18 +27,23 @@ parser = argparse.ArgumentParser(
     prog='CSV Web Scraper',
     description="Scrapes a website's csv files"
 )
-parser.add_argument('-w', '--website', help="Website's root URL")
+parser.add_argument('-w', '--website', help="Website's root URL. Format: 'scheme://netloc/'")
 parser.add_argument('-o', '--output', help='output folder')
 
 args = parser.parse_args()
 
 # Access the values of the flags
 website: str = args.website
-output_folder: str = args.output
-
 if website is None:
     print("Usage is: scrape_csv.py -w <website> [-o <output directory>]")
     exit(1)
+
+root_url: ParseResult = urlparse(website)
+if not root_url.scheme in ['http', 'https']:
+    print("-w website scheme should be 'http' or 'https'")
+    exit(1)
+
+output_folder: str = args.output if args.output is not None else root_url.netloc
 
 # ======== Actual Crawling ======== #
 
@@ -52,6 +59,7 @@ if robots.status_code != 200:
 
 # Open output folder
 
+pathlib.Path(output_folder).mkdir(parents=True, exist_ok=True)
 
 # Parse robots.txt
 rp = robotparser.RobotFileParser()
